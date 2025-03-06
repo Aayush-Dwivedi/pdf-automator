@@ -23,4 +23,4 @@ A powerful **PDF automation tool** that allows you to **merge, split, compress, 
 Install the required dependencies with:  
 ```bash
 pip install pymupdf pypdf2
-# pdf-automator
+
