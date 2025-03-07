@@ -1,138 +1,120 @@
-import os
-import fitz  # PyMuPDF for PDF compression & text extraction
-import PyPDF2  # For merging, splitting, and encryption
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+from tkinterdnd2 import DND_FILES, TkinterDnD
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk
+import PyPDF2
+import os
 
-# Function to merge PDFs
-def merge_pdfs(pdf_list, output_path):
-    merger = PyPDF2.PdfMerger()
-    for pdf in pdf_list:
-        merger.append(pdf)
-    merger.write(output_path)
-    merger.close()
-    print(f"Merged PDF saved as: {output_path}")
+def select_pdf():
+    file_path.set(filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")]))
 
-# Function to split a PDF into separate pages
-def split_pdf(input_pdf, output_folder):
-    with open(input_pdf, "rb") as file:
-        reader = PyPDF2.PdfReader(file)
-        for i in range(len(reader.pages)):
-            writer = PyPDF2.PdfWriter()
-            writer.add_page(reader.pages[i])
-            output_path = os.path.join(output_folder, f"page_{i + 1}.pdf")
-            with open(output_path, "wb") as output_pdf:
-                writer.write(output_pdf)
-            print(f"Saved: {output_path}")
+def merge_pdfs():
+    files = filedialog.askopenfilenames(filetypes=[("PDF Files", "*.pdf")])
+    if not files:
+        return
+    output_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF Files", "*.pdf")])
+    if output_path:
+        merger = PyPDF2.PdfMerger()
+        for pdf in files:
+            merger.append(pdf)
+        merger.write(output_path)
+        merger.close()
+        messagebox.showinfo("Success", "PDFs Merged Successfully!")
 
-# Function to compress a PDF
-def compress_pdf(input_pdf, output_pdf):
-    doc = fitz.open(input_pdf)
-    doc.save(output_pdf, garbage=4, deflate=True)
-    doc.close()
-    print(f"Compressed PDF saved as: {output_pdf}")
+def split_pdf():
+    file = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
+    if not file:
+        return
+    reader = PyPDF2.PdfReader(file)
+    for i in range(len(reader.pages)):
+        writer = PyPDF2.PdfWriter()
+        writer.add_page(reader.pages[i])
+        output_filename = f"{file[:-4]}_page_{i+1}.pdf"
+        with open(output_filename, "wb") as output_pdf:
+            writer.write(output_pdf)
+    messagebox.showinfo("Success", "PDF Split Successfully!")
 
-# Function to encrypt a PDF
-def encrypt_pdf(input_pdf, output_pdf, password):
-    with open(input_pdf, "rb") as file:
+def compress_pdf():
+    file = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
+    if not file:
+        return
+    output_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF Files", "*.pdf")])
+    if output_path:
         reader = PyPDF2.PdfReader(file)
         writer = PyPDF2.PdfWriter()
-
         for page in reader.pages:
+            page.compress_content_streams()
             writer.add_page(page)
+        with open(output_path, "wb") as output_pdf:
+            writer.write(output_pdf)
+        messagebox.showinfo("Success", "PDF Compressed Successfully!")
 
-        writer.encrypt(password)
-        with open(output_pdf, "wb") as output_file:
-            writer.write(output_file)
-    print(f"Encrypted PDF saved as: {output_pdf}")
+def extract_text():
+    file = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
+    if not file:
+        return
+    reader = PyPDF2.PdfReader(file)
+    text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
+    messagebox.showinfo("Extracted Text", text if text else "No text found!")
 
-# Function to extract text from a PDF
-def extract_text(input_pdf):
-    doc = fitz.open(input_pdf)
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    doc.close()
-    return text
-
-# GUI for user interaction
-def open_gui():
-    root = tk.Tk()
-    root.title("PDF Automator")
-    root.geometry("400x500")
-
-    def choose_files():
-        files = filedialog.askopenfilenames(filetypes=[("PDF Files", "*.pdf")])
-        return list(files)
-
-    def choose_file():
-        file = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
-        return file
-
-    def choose_folder():
-        folder = filedialog.askdirectory()
-        return folder
-
-    def merge_action():
-        files = choose_files()
-        if not files:
-            messagebox.showerror("Error", "No files selected")
-            return
-        output = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF Files", "*.pdf")])
-        if output:
-            merge_pdfs(files, output)
-            messagebox.showinfo("Success", "PDFs Merged Successfully!")
-
-    def split_action():
-        file = choose_file()
-        if not file:
-            messagebox.showerror("Error", "No file selected")
-            return
-        folder = choose_folder()
-        if folder:
-            split_pdf(file, folder)
-            messagebox.showinfo("Success", "PDF Split Successfully!")
-
-    def compress_action():
-        file = choose_file()
-        if not file:
-            messagebox.showerror("Error", "No file selected")
-            return
-        output = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF Files", "*.pdf")])
-        if output:
-            compress_pdf(file, output)
-            messagebox.showinfo("Success", "PDF Compressed Successfully!")
-
-    def encrypt_action():
-        file = choose_file()
-        if not file:
-            messagebox.showerror("Error", "No file selected")
-            return
-        password = tk.simpledialog.askstring("Password", "Enter password:", show="*")
-        if not password:
-            messagebox.showerror("Error", "No password entered")
-            return
-        output = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF Files", "*.pdf")])
-        if output:
-            encrypt_pdf(file, output, password)
+def encrypt_pdf():
+    file = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
+    if not file:
+        return
+    password = tk.simpledialog.askstring("Password", "Enter encryption password:", show='*')
+    if password:
+        output_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF Files", "*.pdf")])
+        if output_path:
+            reader = PyPDF2.PdfReader(file)
+            writer = PyPDF2.PdfWriter()
+            for page in reader.pages:
+                writer.add_page(page)
+            writer.encrypt(password)
+            with open(output_path, "wb") as output_pdf:
+                writer.write(output_pdf)
             messagebox.showinfo("Success", "PDF Encrypted Successfully!")
 
-    def extract_text_action():
-        file = choose_file()
-        if not file:
-            messagebox.showerror("Error", "No file selected")
-            return
-        text = extract_text(file)
-        messagebox.showinfo("Extracted Text", text[:1000])  # Show first 1000 characters
+# Main Window Setup
+root = TkinterDnD.Tk()
+root.title("PDF Automator")
+root.state('zoomed')
+root.configure(bg="#ADD8E6")  # Light blue background
 
-    # Buttons
-    tk.Button(root, text="Merge PDFs", command=merge_action).pack(pady=10)
-    tk.Button(root, text="Split PDF", command=split_action).pack(pady=10)
-    tk.Button(root, text="Compress PDF", command=compress_action).pack(pady=10)
-    tk.Button(root, text="Encrypt PDF", command=encrypt_action).pack(pady=10)
-    tk.Button(root, text="Extract Text", command=extract_text_action).pack(pady=10)
+style = ttk.Style()
+style.configure("TButton", font=("Arial", 14), padding=10)
 
-    root.mainloop()
+file_path = tk.StringVar()
 
-if __name__ == "__main__":
-    open_gui()
+def drop(event):
+    file_path.set(event.data.strip('{}'))
+
+label = tk.Label(root, text="📂 Drop your PDF here", font=("Arial", 18, "bold"), bg="#ffffff", fg="#333", relief="solid", padx=20, pady=10)
+label.pack(pady=20)
+
+entry = ttk.Entry(root, textvariable=file_path, width=70, font=("Arial", 14))
+entry.pack(pady=10)
+
+root.drop_target_register(DND_FILES)
+root.dnd_bind("<<Drop>>", drop)
+
+button_frame = ttk.Frame(root)
+button_frame.pack(pady=20)
+
+buttons = [
+    ("📂 Select PDF", select_pdf),
+    ("📑 Merge PDFs", merge_pdfs),
+    ("✂️ Split PDF", split_pdf),
+    ("📉 Compress PDF", compress_pdf),
+    ("📄 Extract Text", extract_text),
+    ("🔒 Encrypt PDF", encrypt_pdf)
+]
+
+for i, (text, command) in enumerate(buttons):
+    btn = ttk.Button(button_frame, text=text, command=command, bootstyle="primary")
+    btn.grid(row=i//3, column=i%3, padx=15, pady=15, sticky="ew")
+
+button_frame.columnconfigure((0, 1, 2), weight=1)
+
+root.mainloop()
