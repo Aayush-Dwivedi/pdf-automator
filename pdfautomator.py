@@ -2,8 +2,7 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from tkinterdnd2 import DND_FILES, TkinterDnD
 import tkinter as tk
-from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
+from tkinter import filedialog, messagebox, simpledialog
 import PyPDF2
 import os
 
@@ -63,7 +62,7 @@ def encrypt_pdf():
     file = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
     if not file:
         return
-    password = tk.simpledialog.askstring("Password", "Enter encryption password:", show='*')
+    password = simpledialog.askstring("Password", "Enter encryption password:", show='*')
     if password:
         output_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF Files", "*.pdf")])
         if output_path:
@@ -76,13 +75,22 @@ def encrypt_pdf():
                 writer.write(output_pdf)
             messagebox.showinfo("Success", "PDF Encrypted Successfully!")
 
+def toggle_theme():
+    if style.theme_use() == "darkly":
+        style.theme_use("flatly")
+        root.configure(bg="#ADD8E6")  # Light blue background
+    else:
+        style.theme_use("darkly")
+        root.configure(bg="#333333")  # Dark mode background
+
 # Main Window Setup
 root = TkinterDnD.Tk()
 root.title("PDF Automator")
 root.state('zoomed')
-root.configure(bg="#ADD8E6")  # Light blue background
+root.configure(bg="#ADD8E6")  # Default Light Blue Background
 
 style = ttk.Style()
+style.theme_use("flatly")
 style.configure("TButton", font=("Arial", 14), padding=10)
 
 file_path = tk.StringVar()
@@ -116,5 +124,9 @@ for i, (text, command) in enumerate(buttons):
     btn.grid(row=i//3, column=i%3, padx=15, pady=15, sticky="ew")
 
 button_frame.columnconfigure((0, 1, 2), weight=1)
+
+# Dark Mode Toggle Button
+theme_button = ttk.Button(root, text="🌙 Toggle Dark Mode", command=toggle_theme, bootstyle="dark")
+theme_button.pack(pady=10)
 
 root.mainloop()
