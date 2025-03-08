@@ -27,7 +27,7 @@ A powerful **PDF automation tool** that allows you to **merge, split, compress, 
 
 ## 🔥 Updates  
 
-📌 **New Features Added:**  
+ **New Features Added:**  
 - **Drag & Drop Support** – Simply drag your PDFs into the app  
 - **Fully Responsive UI** – Automatically adjusts button alignment and sizes  
 - **Improved Background** – Light blue theme for better visibility  
