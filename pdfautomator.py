@@ -78,7 +78,7 @@ def encrypt_pdf():
 def toggle_theme():
     if style.theme_use() == "darkly":
         style.theme_use("flatly")
-        root.configure(bg="#ADD8E6")  # Light blue background
+        root.configure(bg="#ADD8E6")  
     else:
         style.theme_use("darkly")
         root.configure(bg="#333333")  # Dark mode background
